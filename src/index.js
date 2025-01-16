@@ -1,13 +1,21 @@
 import dotenv from "dotenv"
 import connectDB from "./db/index.js";
 //always start the IIFE(IMMEDIATELY INVOKED FUNCTION EXPRESSIONS) with a semicolon
-connectDB()
 
 
 dotenv.config({
-    path:'./env'
+  path:'./env'
 })
 
+connectDB()
+.then(()=>{
+  app.listen(ProcessingInstruction.env.PORT || 8000,()=>{
+    console.log(`server is running at port ${ProcessingInstruction.env.PORT}`)
+  })
+})
+.catch((err)=>{
+  console.log("Mongo DB connection failed!!",err)
+})
 
 
 
