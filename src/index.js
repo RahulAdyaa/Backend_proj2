@@ -20,7 +20,9 @@ connectDB()
   console.log("Mongo DB connection failed!!",err)
 })
 
-
+app.get('/', (req, res) => {
+  res.send('Hello, world!');
+});
 
 
 
