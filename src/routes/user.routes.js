@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/user.controller.js";
+import { loginUser, logoutUser,registerUser } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js"
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router()
 
 router.route("/register").post(
-    //injecting middleware just befoe posting 
+    //injecting middleware just before posting 
     upload.fields([
         {
             name:"avatar",
@@ -17,4 +18,11 @@ router.route("/register").post(
     ]),
     registerUser)
 
+
+router.route("/login").post(loginUser) 
+
+// sbb kuch ese routes hain jo mujhe user ko dene hain , jab user login ho
+
+//SECURED  ROUTES
+router.route("/logout").post(verifyJWT , logoutUser)
 export default router
