@@ -32,21 +32,21 @@ const registerUser = asyncHandler(async (req, res) => {
   // we can check foe each using above syntax but if we want to do it in a group , then we use following code
   
   //validation using array
-  if(
-    [fullName,email,username,password].some((field)=>
-      field?.trim() === "")
-  ){
-    throw new ApiError(400 , "all fields are required")
-  }
+  if ([username, fullName, email, password].some(field =>field ===undefined ||  field?.trim() === "")) { 
+    throw new ApiError(400, "All field are required !!"); 
+    }
+  
   
   validateEmail(email)
 
-  const existedUser=User.findOne({
+  const existedUser= await User.findOne({
     $or:[{ username },{ email }]
   })
   if(existedUser){
     throw new ApiError(409,"User with email or username already exist")
   }
+
+  // console.log("req files",req.files)
   //req.body given by default by express
   // req.files given by multer
   // ? means optional
@@ -59,8 +59,18 @@ const registerUser = asyncHandler(async (req, res) => {
   */
  
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+
+
   console.log("avatarLocalPath:",avatarLocalPath);
+
+
+
+  let coverImageLocalPath;
+  if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length>0){
+    coverImageLocalPath = req.files.coverImage[0].path
+  }
   if(!avatarLocalPath){
     throw new ApiError(400,"Avatar file is required")
   }
