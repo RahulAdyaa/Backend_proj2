@@ -5,30 +5,25 @@ import {validateEmail} from "../validations.js"
 import { User } from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
+import jwt from "jsonwebtoken"
 
-
-const generateAccessAndRefreshTokens = async (userId) => {
+const generateAccessAndRefreshTokens = async(userId) =>{
   try {
-      const user = await User.findById(userId);
-      if (!user) {
-          throw new ApiError(404, "User not found for token generation");
-      }
-      if (!user.generateAccessToken || !user.generateRefreshToken) {
-          throw new ApiError(500, "Token generation methods are missing");
-      }
+      const user = await User.findById(userId)
+      const accessToken = await user.generateAccessToken()
+      const refreshToken = await user.generateRefreshToken()
 
-      const accessToken = user.generateAccessToken();
-      const refreshToken = user.generateRefreshToken();
+      user.refreshToken = refreshToken
+      await user.save({ validateBeforeSave: false })
 
-      user.refreshToken = refreshToken;
-      await user.save({ validateBeforeSave: false });
+      return {accessToken, refreshToken}
 
-      return { accessToken, refreshToken };
+
   } catch (error) {
-      console.error("Token generation error:", error);
-      throw new ApiError(500, "Something went wrong while generating tokens");
+      throw new ApiError(500, "Something went wrong while generating referesh and access token")
   }
-};
+}
+
 
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -194,7 +189,7 @@ const logoutUser = asyncHandler(async(req,res)=>{
     {
       //abb ntana padega , what to update
       $set:{
-        refreshToken:undefined
+        refreshToken:1
       },
       new:true // return mein jo response milega , usmein new updated value milegi , kyuki agar old milegi to old refresh token bhi miljayega
     }
@@ -212,7 +207,58 @@ const logoutUser = asyncHandler(async(req,res)=>{
   .json(new ApiResponse(200 , {} , "User logged Out"))
 })
 
-export { registerUser, loginUser , logoutUser};
+
+const refreshAccessToken =  asyncHandler(async(req,res)=>{
+  const incomingRefreshToken=req.cookies.refreshToken || req.body.refreshToken
+
+  if(incomingRefreshToken){
+    throw new ApiError(400," ")
+  }
+
+  try {
+    const decodedToken=jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    )
+    const user = User.findById(decodedToken?._id)
+  
+    if(!user){
+      throw new ApiError(401,"Invalid Refresh Token")
+        
+      // now we have already created the full encoded refresh token 
+      // and now we will match this refresh token with our newly generrated token
+  
+    }
+    if(incomingRefreshToken !==user.refreshToken){
+      throw new ApiError(401," Refresh Token is expires or used")
+    }
+    //As all the verification process is completed so now we have to generate new access token and refresh token
+  
+    const options={
+      httpOnly:true,
+      secure: true
+  
+    }
+    refreshAccessToken
+  
+    const{accessToken,newrefreshToken}=await generateAccessAndRefreshTokens(user._id)
+  
+    return res.status(200)
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",newrefreshToken)
+    .json(
+      new ApiResponse(200,{accessToken, refreshToken:newrefreshToken}),
+      "Access token refreshed successfully"
+    )
+  } catch (error) {
+    throw new ApiError(401,error?.message||"Invalid Refresh Token")
+
+  }
+
+})
+
+
+export { registerUser, loginUser , logoutUser,refreshAccessToken};
 
 // if we are using req , and next but not res , then we can write like
 
