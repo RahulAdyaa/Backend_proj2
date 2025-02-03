@@ -1,7 +1,6 @@
-   #BACKEND WITH RAHUL
+   ## BACKEND WITH RAHUL
 
-  # Backend System
-
+  
 This is a general backend system project built with **Node.js** and **Express**. It implements basic functionalities like **authentication**, **JWT-based authorization**, and **secure password hashing**.
 
 ## Features
@@ -22,7 +21,7 @@ Ensure you have **Node.js** installed on your machine.
 
 
 
-#MY LEARNINGS ->
+# MY LEARNINGS ->
 Database se jab bhi baat kro , async await lagao 
 hamesha errors aayengi while talking with databse , so use try catch or promises
 
